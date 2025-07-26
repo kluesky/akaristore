@@ -4,24 +4,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Data produk
     const products = {
         weeklyPass: [
-            { name: "Weekly Diamond Pass", price: "23.400" },
-            { name: "1x Weekly Diamond Pass", price: "27.000" },
-            { name: "2x Weekly Diamond Pass", price: "54.000" },
-            { name: "3x Weekly Diamond Pass", price: "81.000" },
-            { name: "4x Weekly Diamond Pass", price: "108.000" },
-            { name: "5x Weekly Diamond Pass", price: "135.000" }
+            { name: "2x Weekly Diamond Pass", price: "64.000" },
+            { name: "3x Weekly Diamond Pass", price: "95.000" },
+            { name: "4x Weekly Diamond Pass", price: "126.500" },
+            { name: "5x Weekly Diamond Pass", price: "150.500" }
         ],
         bonus: [
-            { name: "100 (50+50) Diamonds - First Top Up", price: "12.700" },
-            { name: "300 (150+150) Diamonds - First Top Up", price: "35.500" },
-            { name: "500 (250+250) Diamonds - First Top Up", price: "25.000" },
-            { name: "1000 (500+500) Diamonds - First Top Up", price: "24.000" }
+            { name: "Diamond ML ( SOON SHOWING )", price: "12.700" }
         ]
     };
 
     // Variabel state
     let selectedProduct = null;
-    let selectedPayment = "Bank Transfer";
+    let selectedPayment = "DANA"; // Default ke DANA
+    let orderDetails = null; // Simpan detail pesanan untuk WhatsApp
 
     // Inisialisasi
     function init() {
@@ -35,6 +31,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderProducts() {
         const weeklyGrid = document.getElementById('weeklyPassProducts');
         const bonusGrid = document.getElementById('bonusProducts');
+
+        if (!weeklyGrid || !bonusGrid) {
+            console.error("Elemen weeklyPassProducts atau bonusProducts tidak ditemukan!");
+            showAlert('Terjadi kesalahan: Elemen produk tidak ditemukan. Silakan periksa HTML Anda.', 'error');
+            return;
+        }
 
         products.weeklyPass.forEach(product => {
             weeklyGrid.appendChild(createProductCard(product));
@@ -60,12 +62,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Pilih produk
     function selectProduct(product, cardElement) {
-        // Reset seleksi sebelumnya
         document.querySelectorAll('.product-card').forEach(card => {
             card.classList.remove('selected');
         });
 
-        // Set seleksi baru
         cardElement.classList.add('selected');
         selectedProduct = product;
 
@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const orderBtn = document.getElementById('order-btn');
         if (!orderBtn) {
             console.error("Tombol 'Pesan Sekarang' tidak ditemukan!");
+            showAlert('Terjadi kesalahan: Tombol Pesan Sekarang tidak ditemukan. Silakan periksa HTML Anda.', 'error');
             return;
         }
 
@@ -103,6 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
             serverIdInput.addEventListener('input', updateUI);
         } else {
             console.error("Input ID atau Server tidak ditemukan!");
+            showAlert('Terjadi kesalahan: Input Player ID atau Server ID tidak ditemukan. Silakan periksa HTML Anda.', 'error');
         }
     }
 
@@ -116,6 +118,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateSummary() {
         const noSelection = document.getElementById('no-selection');
         const summaryContent = document.getElementById('summary-content');
+
+        if (!noSelection || !summaryContent) {
+            console.error("Elemen no-selection atau summary-content tidak ditemukan!");
+            showAlert('Terjadi kesalahan: Elemen ringkasan tidak ditemukan. Silakan periksa HTML Anda.', 'error');
+            return;
+        }
 
         if (selectedProduct) {
             noSelection.style.display = 'none';
@@ -146,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function processOrder() {
         // Validasi
         if (!selectedProduct) {
-            showAlert('Silakan pilih produk terlebih dahulu!');
+            showAlert('Silakan pilih produk terlebih dahulu!', 'error');
             return;
         }
 
@@ -154,34 +162,87 @@ document.addEventListener('DOMContentLoaded', function() {
         const serverId = document.getElementById('server-id')?.value.trim();
 
         if (!playerId || !serverId) {
-            showAlert('Silakan lengkapi ID dan Server!');
+            showAlert('Silakan lengkapi ID dan Server!', 'error');
             return;
         }
 
-        // Kirim ke WhatsApp
-        sendWhatsAppOrder(selectedProduct, playerId, serverId, selectedPayment);
+        // Simpan detail pesanan
+        orderDetails = { product: selectedProduct, playerId, serverId, paymentMethod: selectedPayment };
+
+        // Tampilkan alert dengan tombol "Saya Sudah Bayar"
+        const paymentNumber = "083143800370";
+        Swal.fire({
+            title: 'Informasi Pembayaran',
+            text: `Silakan lakukan pembayaran sebesar Rp ${selectedProduct.price} ke nomor ${paymentNumber} melalui ${selectedPayment}. Setelah pembayaran selesai, klik "Saya Sudah Bayar" untuk mengirim konfirmasi ke WhatsApp.`,
+            icon: 'info',
+            confirmButtonText: 'Saya Sudah Bayar',
+            confirmButtonColor: '#28a745', // Warna hijau untuk tombol
+            background: '#fff',
+            customClass: {
+                popup: 'animated-alert',
+                title: 'alert-title',
+                content: 'alert-content'
+            },
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log("Tombol 'Saya Sudah Bayar' diklik, mengarahkan ke WhatsApp...");
+                sendWhatsAppOrder(orderDetails.product, orderDetails.playerId, orderDetails.serverId, orderDetails.paymentMethod);
+            }
+        });
     }
 
-    // Tampilkan alert
-    function showAlert(message) {
-        alert(message);
+    // Tampilkan alert dengan SweetAlert2
+    function showAlert(message, type = 'info') {
+        Swal.fire({
+            title: type === 'error' ? 'Oops!' : 'Informasi',
+            text: message,
+            icon: type,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#007bff',
+            background: '#fff',
+            customClass: {
+                popup: 'animated-alert',
+                title: 'alert-title',
+                content: 'alert-content'
+            },
+            showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+            }
+        });
     }
 
     // Kirim pesan WhatsApp
     function sendWhatsAppOrder(product, playerId, serverId, paymentMethod) {
-        const whatsappNumber = "6283846049866"; // Ganti dengan nomor Anda
-        const message = `Halo AkariStore! Saya ingin membeli:
+        const whatsappNumber = "6283846049866"; // Nomor WhatsApp tujuan
+        const paymentNumber = "083143800370"; // Nomor untuk pembayaran DANA/OVO/Gopay
+        const message = `Halo AkariStore! Saya telah melakukan pembayaran untuk:
 
 Produk: ${product.name}
 Harga: Rp ${product.price}
 Player ID: ${playerId}
 Server ID: ${serverId}
 Metode Pembayaran: ${paymentMethod}
+Pembayaran dikirim ke: ${paymentNumber}
+
+Mohon proses pesanan saya. Bukti transfer akan segera saya kirim melalui WhatsApp ini.
 
 Terima kasih!`;
 
+        console.log("Mengirim pesan WhatsApp:", message);
         const encodedMessage = encodeURIComponent(message);
         window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+
+        // Tampilkan alert konfirmasi
+        showAlert('Terima kasih! Anda telah diarahkan ke WhatsApp untuk mengirim konfirmasi pembayaran. Silakan kirim bukti transfer Anda.', 'success');
     }
 
     // Jalankan inisialisasi
