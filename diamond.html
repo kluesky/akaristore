@@ -3,6 +3,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AkariStore - Diamond Purchase</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
     :root {
@@ -13,6 +15,39 @@
     --gray: #E0E0E0;
     --success: #4CAF50;
 }
+        .product-card {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .product-card:hover {
+            transform: scale(1.05);
+        }
+        .product-card.selected {
+            border-color: #007bff;
+            background-color: #e7f1ff;
+        }
+        #no-selection {
+            display: block;
+        }
+        #summary-content {
+            display: none;
+        }
+        /* Kustomisasi SweetAlert2 */
+        .animated-alert {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .alert-title {
+            font-size: 1.5em;
+            color: #333;
+        }
+        .alert-content {
+            font-size: 1.1em;
+            color: #555;
+        }
 
 * {
     margin: 0;
